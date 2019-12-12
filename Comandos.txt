@@ -1,0 +1,44 @@
+Los comandos se ejecutan solo si tienes ADMIN ROOT (Flag "a" en users .ini)
+
+
+Comandos se ejecutan ejemplo:
+zp_comando "Nombre usuario" "cantidad"
+
+En el caso de usar zp_exp debes dar exp de a poco (maximo 4000)
+
+// Ammopacks
+zp_ap 
+
+zp_puntos
+zp_exp
+zp_reset 
+
+zp_bazooka "Nombre" 
+ó
+zp_bazooka "@"    con el @ le das a todos los jugadores
+
+
+
+Agregar permisos !!! 
+
+Para agregar un VIP.
+"LA BANDA" "" "i" "e" ; Usuario VIP
+
+Para agregar un GOLD
+"LA BANDA" "" "gi" "e" ; Usuario VIP GOLD
+
+Para agregar un MODERADORES
+"LA BANDA" "" "bgi" "e" ; Usuario MODERADOR
+
+
+Editar configuraciones en addons/amxmodx/configs/zombie_galaxy.cfg
+Editar otras configuraciones en addons/amxmodx/configs/zkg_configuracion.ini
+
+
+NO MODIFICAR EL ARCHIVO: addons/amxmodx/configs/cmdaccess.ini 
+NO MODIFICAR EL ARCHIVO: addons/amxmodx/data/vault.ini
+NO BORRAR EL ARCHIVO: zombie_killer_galaxy_security
+EN EL ARCHIVO: plugins-zplague.ini AGREGAS PLUGINS
+
+
+PD: TODOS ESOS ARCHIVOS SE EDITAN CON BLOCK DE NOTAS.
