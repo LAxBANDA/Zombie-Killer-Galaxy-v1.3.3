@@ -42,7 +42,9 @@ new g_top15_clear
 #include <hamsandwich>
 #include <xs>
 #include <engine>
+#if AMXX_VERSION_NUM < 183
 #include <dhudmessage>
+#endif
 #include <cs_player_models_api>
 #include <natives_galaxy>
 #include <sqlx>
@@ -657,7 +659,7 @@ enum _:MAX_ATRIBUTOS
 	Green, // COLOR VERDE DEL TRAIL
 	Blue, // COLOR AZUL DEL TRAIL
 	Ancho, // ANCHO RAYO DE EFECTO
-	Float:gDamage,// DAÑO EJM: 2.0 MULTIPLICADO X2 EL DAÑO NORMAL
+	Float:gDamage,// DAï¿½O EJM: 2.0 MULTIPLICADO X2 EL DAï¿½O NORMAL
 	gNivelReq, // NIVEL QUE REQUIERE EL ARMA
 	gResetReq, // RESET QUE REQUIERE EL ARMA
 	gWeapon, // EL CONST DEL ARMA EJEMPLO (CSW_AK47)
@@ -4265,7 +4267,7 @@ public fw_think(entity)
 		
 		while((e = find_ent_in_sphere(e, centerF, get_pcvar_float(gCvarsPlugin[RADIOBUBBLE][gCvarValor]))) != 0)
 		{
-			// Si no es un player o no es zombie, el campo de fuerza lo ignorará
+			// Si no es un player o no es zombie, el campo de fuerza lo ignorarï¿½
 			if((e > g_maxplayers) || !g_zombie[e] || g_nodamage[e])
 				continue;
 			
@@ -4425,7 +4427,7 @@ public fw_CmdStart(id, handle)
 	
 	// This logic looks kinda weird, but it should work in theory...
 	// p = g_zombie[id], q = g_survivor[id], r = g_cached_customflash
-	// ¬(p v q v (¬p ^ r)) <==> ¬p ^ ¬q ^ (p v ¬r)
+	// ï¿½(p v q v (ï¿½p ^ r)) <==> ï¿½p ^ ï¿½q ^ (p v ï¿½r)
 	if (is_human(id) && (g_zombie[id] || !g_cached_customflash))
 		return;
 	
@@ -11784,7 +11786,7 @@ create_blast2(const Float:originF[3])
 	write_short(g_flameSpr) //Sprite que usaremos
 	write_byte(40) //Cantidades de sprites que generara
 	write_byte(2)  //Vida
-	write_byte(4)  //Tamaño
+	write_byte(4)  //Tamaï¿½o
 	write_byte(60) //Velocidad
 	write_byte(60) //Velocidad
 	message_end()
@@ -13560,13 +13562,7 @@ public Menu_Seleccion_Armas(id)
 
 public handler_selec_arm(id , menu_selec_arm , item)
 {
-	if(item == MENU_EXIT || !is_user_alive(id))
-	{
-		menu_destroy(menu_selec_arm)
-		return PLUGIN_HANDLED
-	}
-    
-	if(!is_human(id))
+	if(item == MENU_EXIT || !is_user_alive(id) || !is_human(id))
 	{
 		menu_destroy(menu_selec_arm)
 		return PLUGIN_HANDLED
@@ -13574,20 +13570,32 @@ public handler_selec_arm(id , menu_selec_arm , item)
         
 	switch(item)
 	{
-		case 0: Menu_Armas(id, 0)
-		case 1: Menu_Pistolas(id, 0)
-		case 2: Menu_Cuchillos(id, 0)
-		case 3: Menu_Granadas(id, 0)
+		case 0: {
+			menu_destroy(menu_selec_arm)
+			Menu_Armas(id, 0)
+		}
+		case 1: {
+			menu_destroy(menu_selec_arm)
+			Menu_Pistolas(id, 0)
+		}
+		case 2: {
+			menu_destroy(menu_selec_arm)
+			Menu_Cuchillos(id, 0)
+		}
+		case 3: {
+			menu_destroy(menu_selec_arm)
+			Menu_Granadas(id, 0)
+		}
 		case 4 :
 		{
+			menu_destroy(menu_selec_arm);
 			if(g_save_weapons[id][1] != -1 && g_save_weapons[id][2] != -1 && g_save_weapons[id][3] != -1 && g_save_weapons[id][4] != -1)
 				GiveArsenal(id, g_save_weapons[id][1], g_save_weapons[id][2], g_save_weapons[id][3], g_save_weapons[id][4])
 			else
 				Menu_Seleccion_Armas(id)
 		}
 	}
-	menu_destroy(menu_selec_arm)
-	return PLUGIN_HANDLED
+	return PLUGIN_HANDLED;
 }
 
 public GiveArsenal(id, prim, sec, gra, kni)
@@ -13688,16 +13696,20 @@ public Menu_Armas_Cases(id , menu_armas , item)
 {
 	if(item == MENU_EXIT)
 	{
+		menu_destroy(menu_armas)
 		Menu_Seleccion_Armas(id)
+		return PLUGIN_HANDLED
+	}
+
+	if(can_buy(id)){
 		menu_destroy(menu_armas)
 		return PLUGIN_HANDLED
 	}
-	if(can_buy(id))
-		return PLUGIN_HANDLED
-		
+
 	if(!g_canbuy[id])
 	{
 		zp_colored_print(id , "%s Ya Haz Comprado Tu^x04 Armamento Primario" , TAG)
+		menu_destroy(menu_armas)
 		return PLUGIN_HANDLED
 	}
 		
@@ -13707,17 +13719,20 @@ public Menu_Armas_Cases(id , menu_armas , item)
 	if(g_level[id] < gArmasOptimizadas[item][gNivelReq])
 	{	
 		zp_colored_print(id, "%s Para elegir la^x04 %s^x01 necesitas ser^x04 Nivel^x01:^x04 %d^x01.", TAG, gArmasOptimizadas[item][gWeaponName], gArmasOptimizadas[item][gNivelReq])
+		menu_destroy(menu_armas)
 		Menu_Armas(id , page)        
 		return PLUGIN_HANDLED
 	}
 	if(g_reset[id] < gArmasOptimizadas[item][gResetReq])
 	{	
 		zp_colored_print(id, "%s Para elegir la^x04 %s^x01 necesitas tener^x01:^x04 %d^x03 Resets.", TAG, gArmasOptimizadas[item][gWeaponName], gArmasOptimizadas[item][gResetReq])
+		menu_destroy(menu_armas)
 		Menu_Armas(id , page)        
 		return PLUGIN_HANDLED
 	}
 	
 	g_save_weapons[id][1] = item
+	menu_destroy(menu_armas)
 	Menu_Seleccion_Armas(id)
 	
 	return PLUGIN_HANDLED
@@ -13743,10 +13758,7 @@ public Menu_Pistolas(taskid , page)
 	new id = taskid
 	new len[999] , temp[22]
 	
-	if(can_buy(id))
-		return PLUGIN_HANDLED
-		
-	if(!g_canbuy_sec[id])
+	if(can_buy(id) || !g_canbuy_sec[id])
 		return PLUGIN_HANDLED
 	
 	new menu_pistolas = menu_create("\yElige Armamento Secundario" , "Menu_Pistolas_Cases")
@@ -13774,16 +13786,19 @@ public Menu_Pistolas_Cases(id , menu_pistolas , item)
 {
 	if(item == MENU_EXIT)
 	{
-		Menu_Seleccion_Armas(id)
 		menu_destroy(menu_pistolas)
+		Menu_Seleccion_Armas(id)
 		return PLUGIN_HANDLED
 	}
 	
-	if(can_buy(id))
+	if(can_buy(id)){
+		menu_destroy(menu_pistolas)
 		return PLUGIN_HANDLED
+	}
 		
 	if(!g_canbuy_sec[id])
 	{
+		menu_destroy(menu_pistolas)
 		zp_colored_print(id , "%s Ya Haz Comprado Tu^x04 Armamento Secundario" , TAG)
 		return PLUGIN_HANDLED
 	}
@@ -13794,16 +13809,19 @@ public Menu_Pistolas_Cases(id , menu_pistolas , item)
 	if(g_level[id] < gPistolasOptimizadas[item][gNivelReq])
 	{	
 		zp_colored_print(id, "%s Para elegir la^x04 %s^x01 necesitas ser^x04 Nivel^x01:^x04 %d^x01.", TAG, gPistolasOptimizadas[item][gWeaponName], gPistolasOptimizadas[item][gNivelReq])
+		menu_destroy(menu_pistolas)
 		Menu_Pistolas(id , page)  
 		return PLUGIN_HANDLED
 	}
 	if(g_reset[id] < gPistolasOptimizadas[item][gResetReq])
 	{	
 		zp_colored_print(id, "%s Para elegir la^x04 %s^x01 necesitas tener^x01:^x04 %d^x03 Resets.", TAG, gPistolasOptimizadas[item][gWeaponName], gPistolasOptimizadas[item][gResetReq])
+		menu_destroy(menu_pistolas)
 		Menu_Pistolas(id , page)  
 		return PLUGIN_HANDLED
 	}
 	g_save_weapons[id][2] = item
+	menu_destroy(menu_pistolas)
 	Menu_Seleccion_Armas(id)
 	
 	return PLUGIN_HANDLED
@@ -13814,11 +13832,8 @@ public Menu_Granadas(taskid , page)
 	new id = taskid
 	new len[999] , temp[22]
 	
-	if(can_buy(id))
-		return PLUGIN_HANDLED
-		
-	if(!g_canbuy_tri[id])
-		return PLUGIN_HANDLED
+	if(can_buy(id) || !g_canbuy_tri[id])
+		return PLUGIN_HANDLED;
 	
 	new menu_granadas = menu_create("\yElige Armamento Extra" , "Menu_Granadas_Cases")
 	
@@ -13845,8 +13860,8 @@ public Menu_Granadas_Cases(id , menu_granadas , item)
 {
 	if(item == MENU_EXIT)
 	{
-		Menu_Seleccion_Armas(id)
 		menu_destroy(menu_granadas)
+		Menu_Seleccion_Armas(id)
 		return PLUGIN_HANDLED
 	}
 	
@@ -13882,8 +13897,8 @@ public Menu_Granadas_Cases(id , menu_granadas , item)
 	
 	g_save_weapons[id][3] = item
 	
-	Menu_Seleccion_Armas(id)
 	menu_destroy(menu_granadas)
+	Menu_Seleccion_Armas(id)
 	return PLUGIN_HANDLED
 }
 
@@ -13893,22 +13908,11 @@ public Menu_Cuchillos(taskid , page)
 	new id = taskid
 	new len[999] , temp[22]
 	
-	if(can_buy(id))
-		return PLUGIN_HANDLED
-		
-	if(!g_canbuy_four[id])
+	if(can_buy(id) || !g_canbuy_four[id])
 		return PLUGIN_HANDLED
 	
 	new menu_cuchillos = menu_create("\yElige Cuchillos" , "Menu_Cuchillos_Cases")
-	
-	/*if(g_save_weapons[id][0])
-	{
-		if(g_save_weapons[id][3] != -1)
-	 	{
-			Menu_Cuchillos_Cases(id , menu_cuchillos , g_save_weapons[id][3])
-			return PLUGIN_HANDLED
-		}
-	}*/
+
 	for(new i = 0 ; i < sizeof gCuchillosOptimizadas ; i++)
 	{
 		if (g_level[id] >= gCuchillosOptimizadas[i][Nivel_Cuchi] && g_reset[id] >= gCuchillosOptimizadas[i][Reset_Cuchi])
@@ -13956,15 +13960,15 @@ public Menu_Cuchillos_Cases(id , menu_cuchillos , item)
 	if(g_level[id] < gCuchillosOptimizadas[item][Nivel_Cuchi])
 	{	
 		zp_colored_print(id, "%s Para elegir^x04 %s^x01 necesitas ser^x04 Nivel^x01:^x04 %d^x01.", TAG, gCuchillosOptimizadas[item][Nombre_Cuchi], gCuchillosOptimizadas[item][Nivel_Cuchi])
-		Menu_Cuchillos(id , page)  
 		menu_destroy(menu_cuchillos)
+		Menu_Cuchillos(id , page)  
 		return PLUGIN_HANDLED
 	}
 	if(g_reset[id] < gCuchillosOptimizadas[item][Reset_Cuchi])
 	{	
 		zp_colored_print(id, "%s Para elegir^x04 %s^x01 necesitas tener^x01:^x04 %d^x03 Resets.", TAG, gCuchillosOptimizadas[item][Nombre_Cuchi], gCuchillosOptimizadas[item][Reset_Cuchi])
-		Menu_Cuchillos(id , page)  
 		menu_destroy(menu_cuchillos)
+		Menu_Cuchillos(id , page)  
 		return PLUGIN_HANDLED
 	}
 
@@ -15217,7 +15221,6 @@ public Comprar_HP(id)
 		zp_colored_print(id, "%s No Tienes Ammopacks Suficientes Para Comprar^x03 +100 HP.", TAG)
 		return;
 	}
-	return;	
 }
 		
 public Comprar_Armor(id)
@@ -15244,7 +15247,6 @@ public Comprar_Armor(id)
 		zp_colored_print(id, "%s No Tienes Ammopacks Suficientes Para Comprar^x03 +100 Chaleco.", TAG)
 		return;
 	}
-	return;	
 }	
 
 UpdateFrags(attacker, victim, frags, deaths, scoreboard)
@@ -17655,7 +17657,7 @@ public menu_mode(id, menuid, item)
 		return PLUGIN_HANDLED
 	}
 	
-	if (iFlags & VIP || iFlags &ADMIN || iFlags & CREADOR)
+	if (iFlags & VIP || iFlags & ADMIN || iFlags & CREADOR)
 	{
 		if (allowed_custom_game())
 		{
@@ -17669,13 +17671,9 @@ public menu_mode(id, menuid, item)
 		show_menu_game_mode(id)
 		return PLUGIN_HANDLED;
 	}
-	else
-	{
-		zp_colored_print(id, "%s %L", TAG, id, "CMD_NOT_ACCESS")
-		return PLUGIN_HANDLED;
-	}
-	
-	menu_destroy(menuid)
+
+	zp_colored_print(id, "%s %L", TAG, id, "CMD_NOT_ACCESS")
+	menu_destroy(menuid);
 	return PLUGIN_HANDLED;
 }
 // Admin command for a custom game mode
@@ -18174,7 +18172,11 @@ public client_connect(id)
 	}
 }
 
+#if AMXX_VERSION_NUM < 183
 public client_disconnect(id)
+#else
+public client_disconnected(id)
+#endif
 {
 	save_stats(id)
 	Save(id)
@@ -18483,7 +18485,7 @@ public Login(id)
 	if(equal(typedpass, ""))
 		return PLUGIN_HANDLED
 
-	md5(typedpass, hash);
+	hashCompatible(typedpass, hash);
 	
 	if(!equal(hash, password[id]))
 	{	
@@ -18572,7 +18574,7 @@ public ChangePasswordOld(id)
 	if(equal(typedpass, "") || equal(new_pass[id], ""))
 		return PLUGIN_HANDLED
 
-	md5(typedpass, hash);
+	hashCompatible(typedpass, hash);
 
 	if(!equali(hash, password[id]))
 	{
@@ -18600,14 +18602,22 @@ public ConfirmPassword(id)
 	return PLUGIN_CONTINUE
 }
 
+hashCompatible(inputString[32], outputString[34]){
+	#if AMXX_VERSION_NUM < 183
+	md5(inputString, outputString);
+	#else
+	hash_string(inputString, HashType:Hash_Md5, outputString, sizeof(outputString) - 1);
+	#endif
+}
+
 public HandlerConfirmPasswordMenu(id, key)
 {
 	switch(key)
 	{
 		case 0:
 		{
-			md5(new_pass[id], hash);
-			
+			hashCompatible(new_pass[id], hash);
+
 			new name[32];
 			get_user_name(id, name, charsmax(name))
 
